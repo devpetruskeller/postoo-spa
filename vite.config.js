@@ -29,5 +29,6 @@ workbox: {
 globPatterns: ['**/*.{js,css,html,svg,png,webp}']
 }
 })
-]
+],
+base: '/postoo-spa/',
 })
