@@ -74,3 +74,102 @@ Update package.json:
   "preview": "vite preview",
   "build:preact": "cross-env USE_PREACT=1 vite build"
 }
+
+ADD to GITHUB PAGES
+
+1) Set the correct base path (Vite)
+
+If your site will be served at
+https://devpetruskeller.github.io/postoo-spa/
+you must set base to '/postoo-spa/'.
+
+Create or edit vite.config.js:
+
+// vite.config.js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/postoo-spa/', // ← critical for GitHub Pages under a repo path
+})
+
+
+Vite’s docs explicitly call this out for GitHub Pages. 
+vitejs
+
+If you later switch to a custom domain (root), set base: '/'.
+
+2) Add a GitHub Actions workflow
+
+Create .github/workflows/pages.yml:
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # SPA fallback: make 404.html = index.html so deep links work
+      - name: Create SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+
+This follows the official Vite static deploy guidance (Actions + dist artifact). 
+vitejs
+
+3) Enable Pages
+
+In your repo:
+
+Settings → Pages → “Build and deployment: Source” → GitHub Actions.
+That tells Pages to use the workflow above. (Same flow as the Vite guide.) 
+vitejs
