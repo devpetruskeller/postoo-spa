@@ -75,7 +75,7 @@ Update package.json:
   "build:preact": "cross-env USE_PREACT=1 vite build"
 }
 
-ADD to GITHUB PAGES
+# ADD to GITHUB PAGES
 
 1) Set the correct base path (Vite)
 
